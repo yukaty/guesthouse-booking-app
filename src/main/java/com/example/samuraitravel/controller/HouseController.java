@@ -16,11 +16,13 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
+import com.example.samuraitravel.entity.Favorite;
 import com.example.samuraitravel.entity.House;
 import com.example.samuraitravel.entity.Review;
 import com.example.samuraitravel.entity.User;
 import com.example.samuraitravel.form.ReservationInputForm;
 import com.example.samuraitravel.security.UserDetailsImpl;
+import com.example.samuraitravel.service.FavoriteService;
 import com.example.samuraitravel.service.HouseService;
 import com.example.samuraitravel.service.ReviewService;
 
@@ -29,10 +31,12 @@ import com.example.samuraitravel.service.ReviewService;
 public class HouseController {
     private final HouseService houseService;
     private final ReviewService reviewService;
+    private final FavoriteService favoriteService;
 
-    public HouseController(HouseService houseService, ReviewService reviewService) {
+    public HouseController(HouseService houseService, ReviewService reviewService, FavoriteService favoriteService) {
         this.houseService = houseService;
         this.reviewService = reviewService;
+        this.favoriteService = favoriteService;
     }
 
     @GetMapping
@@ -94,10 +98,17 @@ public class HouseController {
 
         House house = optionalHouse.get();
         boolean hasUserAlreadyReviewed = false;
+        Favorite favorite = null;
+        boolean isFavorite = false;
 
         if (userDetailsImpl != null) {
             User user = userDetailsImpl.getUser();
             hasUserAlreadyReviewed = reviewService.hasUserAlreadyReviewed(house, user);
+            isFavorite = favoriteService.isFavorite(house, user);
+
+            if (isFavorite) {
+                favorite = favoriteService.findFavoriteByHouseAndUser(house, user);
+            }
         }
 
         List<Review> newReviews = reviewService.findTop6ReviewsByHouseOrderByCreatedAtDesc(house);
@@ -108,6 +119,8 @@ public class HouseController {
         model.addAttribute("hasUserAlreadyReviewed", hasUserAlreadyReviewed);
         model.addAttribute("newReviews", newReviews);
         model.addAttribute("totalReviewCount", totalReviewCount);
+        model.addAttribute("favorite", favorite);
+        model.addAttribute("isFavorite", isFavorite);
 
         return "houses/show";
     }
