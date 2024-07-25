@@ -18,7 +18,7 @@ import lombok.ToString;
 @Entity
 @Table(name = "houses")
 @Data
-@ToString(exclude = "reservations")
+@ToString(exclude = {"reservations", "reviews"})
 public class House {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -58,7 +58,11 @@ public class House {
     /* NOTE: カスケード削除とは
      * 親テーブル（houses）のレコードを削除した際に、子テーブル（reservations）の関連するレコードも同時に削除すること
      */
-    @OneToMany(mappedBy = "house", fetch = FetchType.EAGER, cascade = CascadeType.ALL)
+    @OneToMany(mappedBy = "house", fetch = FetchType.EAGER, cascade = CascadeType.REMOVE)
     private List<Reservation> reservations;
+    
+    @OneToMany(mappedBy = "house", fetch = FetchType.EAGER, cascade = CascadeType.REMOVE)
+    private List<Review> reviews;
+
 }
 
